@@ -22,6 +22,7 @@ class Post(object):
             else:
                 return 'No text in this post'
 
+    # todo find a way to download the image from the link
     def scrap_image(self):
         for post in get_posts(self.page_name, pages=self.num_pages):
             post_image = post['image']
@@ -30,6 +31,8 @@ class Post(object):
             else:
                 return 'The post without image'
 
+    # todo find away to download high quality video from the link
+    # i have issue with the browser
     def scrap_video(self):
         for post in get_posts(self.page_name, pages=self.num_pages, youtube_dl=False):
             post_video = post['video']
