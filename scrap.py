@@ -34,14 +34,25 @@ class Post(object):
     # todo find away to download high quality video from the link
     # i have issue with the browser
     def scrap_video(self):
+        # making youtube_dl = True it should download high quality according to youtube_dl
         for post in get_posts(self.page_name, pages=self.num_pages, youtube_dl=False):
             post_video = post['video']
             if post_video:
                 print(post_video)
 
+    def scrap_post_date(self):
+        for post in get_posts(self.page_name,pages=self.num_pages):
+            date = post['time']
+            time_stamp = post['timestamp']
+            if date and time_stamp:
+                print(date, time_stamp)
+            else:
+                return None
+
 
 # testing
 face = Post('ign', num_pages=3)
+
 #face.scrap_post_text()
 face.scrap_image()
 # face.scrap_video()
