@@ -1,4 +1,5 @@
 from facebook_scraper import get_posts
+import time
 
 """
     here will be the main objects and methods to scrap the facebook pages
@@ -10,38 +11,36 @@ from facebook_scraper import get_posts
 
 class Post(object):
 
-    def __init__(self, page_name, num_pages):
+    def __init__(self, page_name: str, num_pages: int):
+
         self.page_name = page_name
         self.num_pages = num_pages
+        self.post_info = {}
 
+    # scrap post text
     def scrap_post_text(self):
         for post in get_posts(self.page_name, pages=self.num_pages):
+            time.sleep(2)
             post_text = post['post_text']
             if post_text:
-                return post_text
+                print(post_text)
             else:
                 return 'No text in this post'
 
-    # todo find a way to download the image from the link
+    # scrap post image
     def scrap_image(self):
         for post in get_posts(self.page_name, pages=self.num_pages):
+            time.sleep(2)
             post_image = post['image']
             if post_image:
                 return post_image
             else:
                 return 'The post without image'
 
-    # todo find away to download high quality video from the link
-    # i have issue with the browser
-    def scrap_video(self):
-        # making youtube_dl = True it should download high quality according to youtube_dl
-        for post in get_posts(self.page_name, pages=self.num_pages, youtube_dl=False):
-            post_video = post['video']
-            if post_video:
-                print(post_video)
-
+    # scrap post time
     def scrap_post_date(self):
-        for post in get_posts(self.page_name,pages=self.num_pages):
+        for post in get_posts(self.page_name, pages=self.num_pages):
+            time.sleep(2)
             date = post['time']
             time_stamp = post['timestamp']
             if date and time_stamp:
@@ -49,10 +48,14 @@ class Post(object):
             else:
                 return None
 
-
-# testing
-face = Post('ign', num_pages=3)
-
-#face.scrap_post_text()
-face.scrap_image()
-# face.scrap_video()
+    # will scrap all the text, photo, and time in dict
+    def scrap_full_post(self):
+        for post in get_posts(self.page_name, pages=self.num_pages):
+            time.sleep(2)
+            self.post_info['text'] = post['post_text']
+            self.post_info['photo'] = post['image']
+            self.post_info['time'] = post['time']
+            if self.post_info:
+                print(self.post_info)
+            else:
+                return None
