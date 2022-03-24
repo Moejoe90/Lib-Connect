@@ -1,4 +1,4 @@
-from facebook_scraper import get_posts
+from facebook_scraper import get_posts, exceptions
 import requests
 import time
 
@@ -10,21 +10,7 @@ import time
     
 """
 
-
-def check_connection(url):
-    try:
-        # Get Url
-        get = requests.get(url)
-        # if the request succeeds
-        if get.status_code == 200:
-            print(f"{url}: is reachable")
-        else:
-            print(f"{url}: is Not reachable, status_code: {get.status_code}")
-
-    # Exception
-    except requests.exceptions.RequestException as e:
-        # print URL with Errs
-        raise SystemExit(f"{url}: is Not reachable \nErr: {e}")
+DELAY_SECONDS = 2
 
 
 class Post(object):
@@ -34,16 +20,27 @@ class Post(object):
         self.page_name = page_name
         self.num_pages = num_pages
         self.post_info = {}
+        self.url = "https://www.facebook.com/"
+
+    def check_connection(self):
+        try:
+            get = requests.get(self.url)
+            if get.status_code == 200:
+                print(f"{self.url}: is reachable")
+            else:
+                print(f"{self.url}: is Not reachable, status_code: {get.status_code}")
+        except requests.exceptions.RequestException as e:
+            raise ConnectionError(f"{self.url}: is Not reachable \nErr: {e}")
 
     # will scrap all the text, photo, and time in dict
     def scrape_full_post(self):
         keys = ['text', 'photo', 'time']
 
         for post in get_posts(self.page_name, pages=self.num_pages):
-            time.sleep(2)
+            time.sleep(DELAY_SECONDS)
             values = [post['post_text'], post['image'], post['time']]
             self.post_info = dict(zip(keys, values))
             if self.post_info:
                 yield self.post_info
             else:
-                raise Exception("Scraping failure, check your internet connection")
+                raise Exception(exceptions.NotFound)
