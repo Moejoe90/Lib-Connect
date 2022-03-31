@@ -1,21 +1,13 @@
 from scrap import Post
 from facebook_scraper import exceptions
 
-facebook = Post('ign', 2)
+facebook = Post('ign', 10)
 
 
 def grab_facebook():
-    try:
-        for i, j in enumerate(facebook.scrape_full_post()):
-            if facebook.where_to_start(j):
-                print(f"{i} - {j}")
-            else:
-                print("post scraped before")
-                break
-    except exceptions.NotFound:
-        print("Post, page or profile not found / doesn't exist / deleted")
-    finally:
-        print('its done')
+    for i, j in enumerate(facebook.scrape_full_post()):
+        if facebook.resume_scarping(j):
+            print(f"{i} - {j}")
 
 
 if __name__ == '__main__':
