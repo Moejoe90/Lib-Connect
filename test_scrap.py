@@ -15,9 +15,10 @@ class TestPost:
         test_dict = {'time': datetime.datetime(2022, 3, 29, 16, 31, 9)}
         bool_test = test.resume_scarping(test_dict, test_db)
         print(bool_test)
-        assert bool_test
+        assert bool_test == True
 
     def test_scraping(self):
         test = Post('ign', 10)
         posts = test.scrape_full_post()
         assert posts
+
