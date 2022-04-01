@@ -1,5 +1,4 @@
 from scrap import Post
-from facebook_scraper import exceptions
 
 facebook = Post('ign', 10)
 
