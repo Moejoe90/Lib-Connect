@@ -43,7 +43,7 @@ class Post(object):
         else:
             return False
 
-    # will scrap all the text, photo, and time in dict
+    # will scrap all the text, photo, and time as one dict
     def scrape_full_post(self) -> dict:
         if self.check_connection():
             keys = ['text', 'photo', 'time']
