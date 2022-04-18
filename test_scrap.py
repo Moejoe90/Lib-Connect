@@ -1,4 +1,5 @@
 from scrap import Post
+from database import DataBase
 from conftest import post as test_db
 import requests
 import datetime
@@ -22,3 +23,10 @@ class TestPost:
         posts = test.scrape_full_post()
         assert posts
 
+
+class TestDataBase:
+
+    def test_connection(self):
+        drive = DataBase()
+        verify = drive.check_connection()
+        assert verify is None
