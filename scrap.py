@@ -37,8 +37,10 @@ class Post(object):
             raise ConnectionError(f"{self.url}: is Not reachable \nErr: {e}")
 
     # it's static function now later with database I will make it related to this class
+
     @staticmethod
     def resume_scarping(f_posts: dict, last_post: dict) -> bool:
+
         if f_posts['time'] > last_post['time']:
             return True
         else:
@@ -63,3 +65,4 @@ class Post(object):
                         print("Last post already scraped")
             except exceptions.NotFound as e:
                 raise
+

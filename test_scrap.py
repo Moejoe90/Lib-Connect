@@ -24,6 +24,7 @@ class TestPost:
         assert posts
 
 
+
 class TestDataBase:
 
     def test_connection(self):

@@ -18,5 +18,3 @@ face = [{
 
 for post in face:
     pass
-
-
