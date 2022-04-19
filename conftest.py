@@ -15,8 +15,3 @@ face = [{
         'photo': 'https://assets-prd.ignimgs.com/2022/03/18/hogwarts-legacy-4-1647622573681.jpeg?width=1280',
         'time': datetime.datetime(2022, 3, 4, 12, 31, 9)}
 ]
-
-for post in face:
-    pass
-
-
