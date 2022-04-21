@@ -64,5 +64,5 @@ class Post(object):
                     else:
                         print("Last post already scraped")
             except exceptions.NotFound as e:
-                raise
+                raise print(e)
 
