@@ -1,10 +1,50 @@
 from settings import NEO4J_USER, NEO4J_URI, NEO4J_PASSWORD
 from neo4j import GraphDatabase, exceptions
 from neo4j.exceptions import ServiceUnavailable
+from abc import ABC, abstractmethod
 import logging
 
 
-class DataBase:
+class Nodes(ABC):
+
+    @abstractmethod
+    def create_page_node(self, tx, name):
+        try:
+            return tx.run("CREATE (a:Page {Name: $name})", name=name)
+        except Exception(exceptions.CypherSyntaxError):
+            raise
+
+    @abstractmethod
+    def create_relationship(self, tx, page_name, time):
+        query = (
+            "MATCH (a: Page), (b: Post) "
+            "WHERE a.Name = $name AND b.Time = $time "
+            "CREATE (a)-[t:Date {Time:$time}]->(b) "
+            "RETURN t"
+        )
+        result = tx.run(query, name=page_name, time=time)
+        try:
+            return result
+        except ServiceUnavailable as exception:
+            logging.error(f"{query} raised an error: \n {exception}")
+            raise
+
+    @abstractmethod
+    def create_post(self, tx, post_text, image, time):
+        query = (
+            ""
+            "CREATE (b:Post {Name: 'Post', Text: $text, Photo: $image, Time: $time}) "
+            "RETURN b"
+        )
+        result = tx.run(query, text=post_text, image=image, time=time)
+        try:
+            return result
+        except ServiceUnavailable as exception:
+            logging.error(f"{query} raised an error: \n {exception}")
+            raise
+
+
+class DataBase(Nodes):
 
     def __init__(self):
         self.driver = None
@@ -16,6 +56,8 @@ class DataBase:
     def close(self):
         if self.driver is not None:
             self.driver.close()
+        else:
+            raise exceptions.DriverError
 
     def check_connection(self):
         self.driver.verify_connectivity()
@@ -44,57 +86,38 @@ class DataBase:
             except Exception(exceptions.SessionExpired):
                 raise
 
-    @staticmethod
-    def create_page_node(tx, name):
-        try:
-            return tx.run("CREATE (a:Page {Name: $name})", name=name)
-        except Exception(exceptions.CypherSyntaxError):
-            raise
+    # @staticmethod
+    # def create_page_node(tx, name):
+    #     try:
+    #         return tx.run("CREATE (a:Page {Name: $name})", name=name)
+    #     except Exception(exceptions.CypherSyntaxError):
+    #         raise
 
     # @staticmethod
-    # def create_post_node(tx, post_text, image, page_name, time):
+    # def create_relationship(tx, page_name, time):
     #     query = (
-    #         "MATCH (a:Page) "
-    #         "WHERE a.name = $page "
-    #         "CREATE (b:Post {Name: 'Post', Text: $text, Photo: $image}) "
-    #         "CREATE (a)-[t:Date {Time: $time}]->(b) "
-    #         "RETURN a, b, t"
+    #         "MATCH (a: Page), (b: Post) "
+    #         "WHERE a.Name = $name AND b.Time = $time "
+    #         "CREATE (a)-[t:Date {Time:$time}]->(b) "
+    #         "RETURN t"
     #     )
-    #     result = tx.run(query, text=post_text, image=image, page=page_name, time=time)
+    #     result = tx.run(query, name=page_name, time=time)
     #     try:
-    #         # return result
-    #         return [{
-    #             "b": row["b"]["Post", "Text", "Photo"]
-    #         } for row in result]
-    #
+    #         return result
     #     except ServiceUnavailable as exception:
     #         logging.error(f"{query} raised an error: \n {exception}")
     #         raise
 
-    @staticmethod
-    def create_relationship(tx, page_name, time):
-        query = (
-            "MATCH (a: Page), (b: Post) "
-            "WHERE a.Name = $name AND b.Time = $time "
-            "CREATE (a)-[t:Date {Time:$time}]->(b) "
-            "RETURN t"
-        )
-        result = tx.run(query, name=page_name, time=time)
-        try:
-            return result
-        except ServiceUnavailable as exception:
-            logging.error(f"{query} raised an error: \n {exception}")
-            raise
-
-    @staticmethod
-    def create_post(tx, post_text, image, time):
-        query = (
-            "CREATE (b:Post {Name: 'Post', Text: $text, Photo: $image, Time: $time}) "
-            "RETURN b"
-        )
-        result = tx.run(query, text=post_text, image=image, time=time)
-        try:
-            return result
-        except ServiceUnavailable as exception:
-            logging.error(f"{query} raised an error: \n {exception}")
-            raise
+    # @staticmethod
+    # def create_post(tx, post_text, image, time):
+    #     query = (
+    #         ""
+    #         "CREATE (b:Post {Name: 'Post', Text: $text, Photo: $image, Time: $time}) "
+    #         "RETURN b"
+    #     )
+    #     result = tx.run(query, text=post_text, image=image, time=time)
+    #     try:
+    #         return result
+    #     except ServiceUnavailable as exception:
+    #         logging.error(f"{query} raised an error: \n {exception}")
+    #         raise
