@@ -1,21 +1,30 @@
 from neo4j import GraphDatabase, exceptions, basic_auth
 from neo4j.exceptions import ServiceUnavailable
 from abc import ABC, abstractmethod
+from exceptions import PageNotFound
 import logging
+import datetime
+
+date = datetime.datetime.now()
+ts = date.timestamp()
 
 
 class Nodes(ABC):
 
     @abstractmethod
-    def create_page_node(self, tx, name):
+    def _create_page_node(self, tx, name):
         pass
 
     @abstractmethod
-    def create_relationship(self, tx, page_name, time):
+    def _create_relationship(self, tx, page_name, time):
         pass
 
     @abstractmethod
-    def create_post(self, tx, post_text, image, time):
+    def _create_post(self, tx, post_text, image, time):
+        pass
+
+    @abstractmethod
+    def _find_page(self, tx, page_name):
         pass
 
 
@@ -40,13 +49,13 @@ class DataBase(Nodes):
     def check_connection(self):
         self.driver.verify_connectivity()
 
-    def create_page_node(self, tx, name):
+    def _create_page_node(self, tx, name):
         try:
-            return tx.run("CREATE (a:Page {Name: $name})", name=name)
+            return tx.run("CREATE (a:Page {Name: $name, Created_at: $timestamp})", name=name, timestamp=ts)
         except Exception(exceptions.CypherSyntaxError):
             raise
 
-    def create_relationship(self, tx, page_name, time):
+    def _create_relationship(self, tx, page_name, time):
         query = (
             "MATCH (a: Page), (b: Post) "
             "WHERE a.Name = $name AND b.Time = $time "
@@ -60,23 +69,33 @@ class DataBase(Nodes):
             logging.error(f"{query} raised an error: \n {exception}")
             raise
 
-    def create_post(self, tx, post_text, image, time):
+    def _create_post(self, tx, post_text, image, time):
         query = (
             ""
-            "CREATE (b:Post {Name: 'Post', Text: $text, Photo: $image, Time: $time}) "
+            "CREATE (b:Post {Name: 'Post', Text: $text, Photo: $image, Time: $time, Created_at:$timestamp}) "
             "RETURN b"
         )
-        result = tx.run(query, text=post_text, image=image, time=time)
+        result = tx.run(query, text=post_text, image=image, time=time, timestamp=ts)
         try:
             return result
         except ServiceUnavailable as exception:
             logging.error(f"{query} raised an error: \n {exception}")
             raise
 
+    def _find_page(self, tx, page_name):
+        query = (
+            "MATCH (a:Page) "
+            "WHERE a.Name = $page_name "
+            "RETURN a.Name AS name"
+        )
+
+        result = tx.run(query, page_name=page_name)
+        return [row['name'] for row in result]
+
     def add_page(self, name):
         with self.driver.session() as session:
             try:
-                session.write_transaction(self.create_page_node, name)
+                session.write_transaction(self._create_page_node, name)
                 print(f"the page node named {name} has been created")
             except Exception(exceptions.SessionExpired):
                 raise
@@ -84,7 +103,7 @@ class DataBase(Nodes):
     def add_post(self, post_text, image, time):
         with self.driver.session() as session:
             try:
-                session.write_transaction(self.create_post, post_text, image, time)
+                session.write_transaction(self._create_post, post_text, image, time)
                 print(f"the post node has been created")
             except Exception(exceptions.SessionExpired):
                 raise
@@ -92,7 +111,16 @@ class DataBase(Nodes):
     def add_relationship(self, page_name, time):
         with self.driver.session() as session:
             try:
-                session.write_transaction(self.create_relationship, page_name, time)
+                session.write_transaction(self._create_relationship, page_name, time)
                 print(f"{page_name}--[{time}]-->'post'")
             except Exception(exceptions.SessionExpired):
                 raise
+
+    def fine_page(self, page_name):
+        with self.driver.session() as session:
+            result = session.read_transaction(self._find_page, page_name)
+            try:
+                return {'page_found': row for row in result}
+            except PageNotFound:
+                print(f"{page_name} Page not found in database")
+
