@@ -1,6 +1,7 @@
 from database import DataBase
 from conftest import scraped_data
 from settings import TEST_USER, TEST_URI, TEST_PASSWORD
+import time
 
 PAGE_NAME = 'GameSpot'
 
@@ -12,6 +13,7 @@ class TestDataBase:
         verify = driver.check_connection()
         assert verify is None
 
+    # create nodes and destroy it
     def test_create_nodes(self):
         driver = DataBase(uri=TEST_URI, user=TEST_USER, password=TEST_PASSWORD)
         driver.add_page(PAGE_NAME)
@@ -20,6 +22,13 @@ class TestDataBase:
             driver.add_relationship(page_name=PAGE_NAME, time=post['time'])
         driver.close()
         assert driver.fine_page(PAGE_NAME)['page_found'] == PAGE_NAME
+        time.sleep(4)
+        query = (
+            "MATCH (n)"
+            "DETACH DELETE n"
+        )
+        # clean database from the nodes we create in testing
+        driver.query(query=query)
 
     # TODO check the last node
     def test_exist_nodes(self):
