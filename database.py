@@ -1,5 +1,4 @@
-from settings import NEO4J_USER, NEO4J_URI, NEO4J_PASSWORD
-from neo4j import GraphDatabase, exceptions
+from neo4j import GraphDatabase, exceptions, basic_auth
 from neo4j.exceptions import ServiceUnavailable
 from abc import ABC, abstractmethod
 import logging
@@ -9,12 +8,44 @@ class Nodes(ABC):
 
     @abstractmethod
     def create_page_node(self, tx, name):
+        pass
+
+    @abstractmethod
+    def create_relationship(self, tx, page_name, time):
+        pass
+
+    @abstractmethod
+    def create_post(self, tx, post_text, image, time):
+        pass
+
+
+class DataBase(Nodes):
+
+    def __init__(self, uri, user, password):
+        self.uri = uri
+        self.user = user
+        self.password = password
+        self.driver = None
+        try:
+            self.driver = GraphDatabase.driver(uri, auth=basic_auth(user, password))
+        except Exception(exceptions.AuthError):
+            raise
+
+    def close(self):
+        if self.driver is not None:
+            self.driver.close()
+        else:
+            raise exceptions.DriverError
+
+    def check_connection(self):
+        self.driver.verify_connectivity()
+
+    def create_page_node(self, tx, name):
         try:
             return tx.run("CREATE (a:Page {Name: $name})", name=name)
         except Exception(exceptions.CypherSyntaxError):
             raise
 
-    @abstractmethod
     def create_relationship(self, tx, page_name, time):
         query = (
             "MATCH (a: Page), (b: Post) "
@@ -29,7 +60,6 @@ class Nodes(ABC):
             logging.error(f"{query} raised an error: \n {exception}")
             raise
 
-    @abstractmethod
     def create_post(self, tx, post_text, image, time):
         query = (
             ""
@@ -42,25 +72,6 @@ class Nodes(ABC):
         except ServiceUnavailable as exception:
             logging.error(f"{query} raised an error: \n {exception}")
             raise
-
-
-class DataBase(Nodes):
-
-    def __init__(self):
-        self.driver = None
-        try:
-            self.driver = GraphDatabase.driver(uri=NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
-        except Exception(exceptions.AuthError):
-            raise
-
-    def close(self):
-        if self.driver is not None:
-            self.driver.close()
-        else:
-            raise exceptions.DriverError
-
-    def check_connection(self):
-        self.driver.verify_connectivity()
 
     def add_page(self, name):
         with self.driver.session() as session:
