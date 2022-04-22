@@ -118,9 +118,22 @@ class DataBase(Nodes):
 
     def fine_page(self, page_name):
         with self.driver.session() as session:
-            result = session.read_transaction(self._find_page, page_name)
             try:
+                result = session.read_transaction(self._find_page, page_name)
                 return {'page_found': row for row in result}
             except PageNotFound:
                 print(f"{page_name} Page not found in database")
 
+    def query(self, query, parameters=None, db=None):
+        assert self.driver is not None, "Driver not initialized!"
+        session = None
+        response = None
+        try:
+            session = self.driver.session(database=db) if db is not None else self.driver.session()
+            response = list(session.run(query, parameters))
+        except Exception as e:
+            print("Query failed:", e)
+        finally:
+            if session is not None:
+                session.close()
+        return response
