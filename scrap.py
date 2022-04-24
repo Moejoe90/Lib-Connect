@@ -1,5 +1,6 @@
 import requests
 import time
+import hashlib
 from facebook_scraper import get_posts, exceptions
 from conftest import post as test_db
 
@@ -36,16 +37,6 @@ class Post(object):
         except requests.exceptions.ConnectionError as e:
             raise ConnectionError(f"{self.url}: is Not reachable \nErr: {e}")
 
-    # it's static function now later with database I will make it related to this class
-
-    @staticmethod
-    def resume_scarping(f_posts: dict, last_post: dict) -> bool:
-
-        if f_posts['time'] > last_post['time']:
-            return True
-        else:
-            return False
-
     # will scrap all the text, photo, and time as one dict
     def scrape_full_post(self) -> dict:
         if self.check_connection():
@@ -66,3 +57,17 @@ class Post(object):
             except exceptions.NotFound as e:
                 raise print(e)
 
+    # it's static function now later with database I will make it related to this class
+    @staticmethod
+    def resume_scarping(f_posts: dict, last_post: dict) -> bool:
+
+        if f_posts['time'] > last_post['time']:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def hash_everything(to_hash: dict) -> dict:
+        to_hash['text'] = hashlib.md5(str(to_hash['text']).encode())
+        to_hash['time'] = hashlib.md5(str(to_hash['time']).encode())
+        return to_hash
