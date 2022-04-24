@@ -1,7 +1,7 @@
 from neo4j import GraphDatabase, exceptions, basic_auth
 from neo4j.exceptions import ServiceUnavailable
 from abc import ABC, abstractmethod
-from exceptions import PageNotFound
+from exceptions import PageNotFound, PostNotFound
 import logging
 import datetime
 
@@ -25,6 +25,10 @@ class Nodes(ABC):
 
     @abstractmethod
     def _find_page(self, tx, page_name):
+        pass
+
+    @abstractmethod
+    def _find_post(self, tx, page_name):
         pass
 
 
@@ -92,6 +96,17 @@ class DataBase(Nodes):
         result = tx.run(query, page_name=page_name)
         return [row['name'] for row in result]
 
+    def _find_post(self, tx, page_name):
+        query = (
+            "MATCH (a:Page), (b:Post) "
+            "WHERE a.Name = $page_name "
+            "RETURN b.Time AS time "
+            "Order by b.Time desc "
+            "Limit 1"
+        )
+        result = tx.run(query, page_name=page_name)
+        return [row['time'] for row in result]
+
     def add_page(self, name):
         with self.driver.session() as session:
             try:
@@ -116,23 +131,34 @@ class DataBase(Nodes):
             except Exception(exceptions.SessionExpired):
                 raise
 
-    def fine_page(self, page_name):
+    def find_page(self, page_name):
         with self.driver.session() as session:
             try:
                 result = session.read_transaction(self._find_page, page_name)
-                return {'page_found': row for row in result}
+                page = {'page_found': row for row in result}
+                return page
             except PageNotFound:
                 print(f"{page_name} Page not found in database")
 
+    # to find the newest post in database
+    def find_post(self, page_name):
+        with self.driver.session() as session:
+            try:
+                result = session.read_transaction(self._find_post, page_name)
+                post = {'time': row for row in result}
+                return post
+            except PostNotFound:
+                print(f"{page_name} or Post node not found")
+
+    # to use any custom query in database
     def query(self, query, parameters=None, db=None):
         assert self.driver is not None, "Driver not initialized!"
         session = None
-        response = None
         try:
             session = self.driver.session(database=db) if db is not None else self.driver.session()
             response = list(session.run(query, parameters))
-        except Exception as e:
-            print("Query failed:", e)
+        except Exception(exceptions.CypherSyntaxError):
+            raise
         finally:
             if session is not None:
                 session.close()
