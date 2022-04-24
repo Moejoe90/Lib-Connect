@@ -20,8 +20,7 @@ class TestDataBase:
         for post in scraped_data:
             driver.add_post(post_text=post['text'], time=post['time'], image=post['photo'])
             driver.add_relationship(page_name=PAGE_NAME, time=post['time'])
-        driver.close()
-        assert driver.fine_page(PAGE_NAME)['page_found'] == PAGE_NAME
+        assert driver.find_page(PAGE_NAME)['page_found'] == PAGE_NAME
         time.sleep(4)
         query = (
             "MATCH (n)"
@@ -29,7 +28,13 @@ class TestDataBase:
         )
         # clean database from the nodes we create in testing
         driver.query(query=query)
+        driver.close()
 
     # TODO check the last node
     def test_exist_nodes(self):
-        pass
+        driver = DataBase(uri=TEST_URI, user=TEST_USER, password=TEST_PASSWORD)
+        x = driver.find_post(PAGE_NAME)
+        for post in scraped_data:
+            assert x['time'].time() == post['time'].time()
+        print(x['time'], 'its my dict')
+        driver.close()
