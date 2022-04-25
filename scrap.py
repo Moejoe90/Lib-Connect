@@ -3,13 +3,6 @@ import time
 from facebook_scraper import get_posts, exceptions
 from conftest import post as test_db
 
-"""
-    here will be the main objects and methods to 
-    scrap the facebook pages the idea is init 
-    require two arguments the page name and how 
-    many page you want to scrape, and resume the 
-    scraping from it's stop
-"""
 
 DELAY_SECONDS = 2
 
@@ -36,13 +29,6 @@ class Post(object):
         except requests.exceptions.ConnectionError as e:
             raise ConnectionError(f"{self.url}: is Not reachable \nErr: {e}")
 
-    # it's static function now later with database I will make it related to this class
-    def resume_scarping(self, f_posts: dict, last_post: dict) -> bool:
-        if f_posts['time'] > last_post['time']:
-            return True
-        else:
-            return False
-
     # will scrap all the text, photo, and time as one dict
     def scrape_full_post(self) -> dict:
         if self.check_connection():
@@ -61,4 +47,12 @@ class Post(object):
                     else:
                         print("Last post already scraped")
             except exceptions.NotFound as e:
-                raise exceptions.NotFound("Post not found")
+                raise print(e)
+
+    @staticmethod
+    def resume_scarping(f_posts: dict, last_post: dict) -> bool:
+
+        if f_posts['time'] > last_post['time']:
+            return True
+        else:
+            return False

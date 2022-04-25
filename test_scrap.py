@@ -21,4 +21,3 @@ class TestPost:
         test = Post('ign', 10)
         posts = test.scrape_full_post()
         assert posts
-
