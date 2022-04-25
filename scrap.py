@@ -3,13 +3,6 @@ import time
 from facebook_scraper import get_posts, exceptions
 from conftest import post as test_db
 
-"""
-    here will be the main objects and methods to 
-    scrap the facebook pages the idea is init 
-    require two arguments the page name and how 
-    many page you want to scrape, and resume the 
-    scraping from it's stop
-"""
 
 DELAY_SECONDS = 2
 
@@ -56,7 +49,6 @@ class Post(object):
             except exceptions.NotFound as e:
                 raise print(e)
 
-    # it's static function now later with database I will make it related to this class
     @staticmethod
     def resume_scarping(f_posts: dict, last_post: dict) -> bool:
 
