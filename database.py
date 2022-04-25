@@ -32,7 +32,7 @@ class Nodes(ABC):
     def _find_post(self, tx, page_name):
         pass
 
-    def _hash_everything(self, text, time):
+    def _hash_(self, text, time):
         pass
 
 
@@ -78,16 +78,14 @@ class DataBase(Nodes):
             raise
 
     def _create_post(self, tx, post_text, image, time):
-        hashed_dict = self._hash_everything(post_text, time)
-        hashed_text = hashed_dict['text'].hexdigest()
-        hashed_time = hashed_dict['time'].hexdigest()
+        hashed_id = self._hash_(post_text, time).hexdigest()
         query = (
             ""
-            "CREATE (b:Post {Name: 'Post', Text: $text, Photo: $image, Time: $time, id_text: $hashed_text, "
-            "id_time: $hashed_time}) "
+            "CREATE (b:Post {Name: 'Post', Text: $text, Photo: $image, Time: $time, "
+            "hashed_id: $hashed_id}) "
             "RETURN b"
         )
-        result = tx.run(query, text=post_text, image=image, time=time, hashed_text=hashed_text, hashed_time=hashed_time)
+        result = tx.run(query, text=post_text, image=image, time=time, hashed_id=hashed_id)
         try:
             return result
         except ServiceUnavailable as exception:
@@ -115,9 +113,9 @@ class DataBase(Nodes):
         result = tx.run(query, page_name=page_name)
         return [row['time'] for row in result]
 
-    def _hash_everything(self, text, time):
-        hashed = {'text': hashlib.md5(str(text).encode()),
-                  'time': hashlib.md5(str(time).encode())}
+    def _hash_(self, text, time):
+        to_hash = "".join((text, str(time)))
+        hashed = hashlib.md5(to_hash.encode())
         return hashed
 
     def add_page(self, name):
