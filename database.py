@@ -3,6 +3,7 @@ from neo4j.exceptions import ServiceUnavailable
 from abc import ABC, abstractmethod
 from exceptions import PageNotFound, PostNotFound
 import logging
+import hashlib
 import datetime
 
 date = datetime.datetime.now()
@@ -31,6 +32,9 @@ class Nodes(ABC):
     def _find_post(self, tx, page_name):
         pass
 
+    def _hash_everything(self, text, time):
+        pass
+
 
 class DataBase(Nodes):
 
@@ -55,7 +59,7 @@ class DataBase(Nodes):
 
     def _create_page_node(self, tx, name):
         try:
-            return tx.run("CREATE (a:Page {Name: $name, Created_at: $timestamp})", name=name, timestamp=ts)
+            return tx.run("CREATE (a:Page {Name: $name, Created_at: $timestamp})", name=name)
         except Exception(exceptions.CypherSyntaxError):
             raise
 
@@ -74,12 +78,16 @@ class DataBase(Nodes):
             raise
 
     def _create_post(self, tx, post_text, image, time):
+        hashed_dict = self._hash_everything(post_text, str(time))
+        hashed_text = hashed_dict['text']
+        hashed_time = hashed_dict['time']
         query = (
             ""
-            "CREATE (b:Post {Name: 'Post', Text: $text, Photo: $image, Time: $time, Created_at:$timestamp}) "
+            "CREATE (b:Post {Name: 'Post', Text: $text, Photo: $image, Time: $time, id_text: $hashed_text, "
+            "id_time: $hashed_time}) "
             "RETURN b"
         )
-        result = tx.run(query, text=post_text, image=image, time=time, timestamp=ts)
+        result = tx.run(query, text=post_text, image=image, time=time, id_text=hashed_text, id_time=hashed_time)
         try:
             return result
         except ServiceUnavailable as exception:
@@ -106,6 +114,11 @@ class DataBase(Nodes):
         )
         result = tx.run(query, page_name=page_name)
         return [row['time'] for row in result]
+
+    def _hash_everything(self, text, time):
+        hashed = {'text': hashlib.md5(str(text).encode()),
+                  'time': hashlib.md5(str(time).encode())}
+        return hashed
 
     def add_page(self, name):
         with self.driver.session() as session:
