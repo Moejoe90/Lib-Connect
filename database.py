@@ -59,7 +59,7 @@ class DataBase(Nodes):
 
     def _create_page_node(self, tx, name):
         try:
-            return tx.run("CREATE (a:Page {Name: $name, Created_at: $timestamp})", name=name)
+            return tx.run("CREATE (a:Page {Name: $name})", name=name)
         except Exception(exceptions.CypherSyntaxError):
             raise
 
@@ -78,16 +78,16 @@ class DataBase(Nodes):
             raise
 
     def _create_post(self, tx, post_text, image, time):
-        hashed_dict = self._hash_everything(post_text, str(time))
-        hashed_text = hashed_dict['text']
-        hashed_time = hashed_dict['time']
+        hashed_dict = self._hash_everything(post_text, time)
+        hashed_text = hashed_dict['text'].hexdigest()
+        hashed_time = hashed_dict['time'].hexdigest()
         query = (
             ""
             "CREATE (b:Post {Name: 'Post', Text: $text, Photo: $image, Time: $time, id_text: $hashed_text, "
             "id_time: $hashed_time}) "
             "RETURN b"
         )
-        result = tx.run(query, text=post_text, image=image, time=time, id_text=hashed_text, id_time=hashed_time)
+        result = tx.run(query, text=post_text, image=image, time=time, hashed_text=hashed_text, hashed_time=hashed_time)
         try:
             return result
         except ServiceUnavailable as exception:
