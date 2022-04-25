@@ -1,6 +1,5 @@
 import requests
 import time
-import hashlib
 from facebook_scraper import get_posts, exceptions
 from conftest import post as test_db
 
@@ -65,9 +64,3 @@ class Post(object):
             return True
         else:
             return False
-
-    @staticmethod
-    def hash_everything(to_hash: dict) -> dict:
-        to_hash['text'] = hashlib.md5(str(to_hash['text']).encode())
-        to_hash['time'] = hashlib.md5(str(to_hash['time']).encode())
-        return to_hash
