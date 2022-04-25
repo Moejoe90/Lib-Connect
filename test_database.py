@@ -30,11 +30,11 @@ class TestDataBase:
         driver.query(query=query)
         driver.close()
 
-    # TODO check the last node
+    # check existing nodes
     def test_exist_nodes(self):
         driver = DataBase(uri=TEST_URI, user=TEST_USER, password=TEST_PASSWORD)
         x = driver.find_post(PAGE_NAME)
         for post in scraped_data:
-            assert x['time'].time() == post['time'].time()
-        print(x['time'], 'its my dict')
+            if x['time'] == post['time']:
+                print(x['time'], 'its my dict')
         driver.close()
