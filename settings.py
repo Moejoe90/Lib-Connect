@@ -15,3 +15,8 @@ NEO4J_URI = os.getenv("NEO4J_URI")
 TEST_USER = os.getenv("TEST_USER")
 TEST_URI = os.getenv("TEST_URI")
 TEST_PASSWORD = os.getenv("TEST_PASSWORD")
+
+# load auth for AWS S3
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
+BUCKET_NAME = os.getenv("BUCKET_NAME")
